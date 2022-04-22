@@ -20,6 +20,7 @@ async function run() {
         await client.connect();
         const database = client.db("fakeAccountNo");
         const accountCollection = database.collection("bbBank");
+        const userBalanceCollection = database.collection("userBalance");
 
         const merchantsCollection = database.collection("merchants");
 
@@ -47,6 +48,23 @@ async function run() {
             const cursor = accountCollection.find({});
             const accountno = await cursor.toArray();
             res.send(accountno);
+        })
+
+        //add money
+
+        app.post('/addMoney', async (req, res) => {
+            const bank = req.body.bank;
+            const email = req.body.email;
+            const accountno = req.body.accountno;
+            const amount = req.body.amount;
+            const addMoney = {
+                bank,
+                email,
+                accountno,
+                amount
+            }
+            const result = await userBalanceCollection.insertOne(addMoney)
+            res.json(result);
         })
 
 
@@ -92,6 +110,7 @@ async function run() {
             const result = await merchantsCollection.updateOne(filter, updateDoc, options);
 
         })
+
 
 
     }

@@ -4,8 +4,12 @@ const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const fileUpload = require('express-fileupload');
-
+// const ObjectId = require('mongodb').ObjectId
 const port = process.env.PORT || 5000;
+
+var bodyParser = require('body-parser');
+
+app.use(bodyParser());
 app.use(cors());
 app.use(fileUpload());
 
@@ -21,8 +25,9 @@ async function run() {
         const database = client.db("fakeAccountNo");
         const accountCollection = database.collection("bbBank");
         const userBalanceCollection = database.collection("userBalance");
+        const reviewCollection = database.collection("review");
 
-        const merchantsCollection = database.collection("merchants");
+        // const merchantsCollection = database.collection("merchants");
 
 
 
@@ -53,63 +58,78 @@ async function run() {
         //add money
 
         app.post('/addMoney', async (req, res) => {
-            const bank = req.body.bank;
-            const email = req.body.email;
-            const accountno = req.body.accountno;
-            const amount = req.body.amount;
-            const addMoney = {
-                bank,
-                email,
-                accountno,
-                amount
-            }
+            // console.log('req', req.body);
+            const addMoney = req.body;
             const result = await userBalanceCollection.insertOne(addMoney)
+            res.json(result);
+        })
+
+
+        app.get('/addMoney', async (req, res) => {
+            const cursor = userBalanceCollection.find({});
+            const result = await cursor.toArray();
+            res.json(result);
+        })
+
+        //review
+        app.post('/review', async (req, res) => {
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review);
+
+            res.json(result);
+
+        })
+
+
+        app.get('/review', async (req, res) => {
+            const cursor = reviewCollection.find({});
+            const result = await cursor.toArray();
             res.json(result);
         })
 
 
         //merchant get post put
 
-        app.post('/merchants', async (req, res) => {
-            const businessName = req.body.businessName;
-            const businessLogo = req.files.businessLogo;
-            const merchantPhone = req.body.merchantPhone;
-            const merchantNid = req.body.merchantNid;
-            const picData = businessLogo.data;
-            const encodedPic = picData.toString('base64');
-            const imageBuffer = Buffer.from(encodedPic, 'base64');
-            const merchant = {
-                businessName,
-                merchantPhone,
-                merchantNid,
+        // app.post('/merchants', async (req, res) => {
+        //     const businessName = req.body.businessName;
+        //     const businessLogo = req.files.businessLogo;
+        //     const merchantPhone = req.body.merchantPhone;
+        //     const merchantNid = req.body.merchantNid;
+        //     const picData = businessLogo.data;
+        //     const encodedPic = picData.toString('base64');
+        //     const imageBuffer = Buffer.from(encodedPic, 'base64');
+        //     const merchant = {
+        //         businessName,
+        //         merchantPhone,
+        //         merchantNid,
 
-                businessLogo: imageBuffer
-            }
-            const result = await merchantsCollection.insertOne(merchant)
+        //         businessLogo: imageBuffer
+        //     }
+        //     const result = await merchantsCollection.insertOne(merchant)
 
-            res.json(result);
-        })
+        //     res.json(result);
+        // })
 
-        app.get('/merchants', async (req, res) => {
-            const cursor = merchantsCollection.find({});
-            const merchants = await cursor.toArray();
-            res.send(merchants);
-        })
+        // app.get('/merchants', async (req, res) => {
+        //     const cursor = merchantsCollection.find({});
+        //     const merchants = await cursor.toArray();
+        //     res.send(merchants);
+        // })
 
-        app.put('/merchants/:id', async (req, res) => {
+        // app.put('/merchants/:id', async (req, res) => {
 
-            const id = req.params.id;
-            const options = { upsert: true };
-            const updateDoc = {
-                $set: {
-                    status: `Approved`
-                },
-            };
+        //     const id = req.params.id;
+        //     const options = { upsert: true };
+        //     const updateDoc = {
+        //         $set: {
+        //             status: `Approved`
+        //         },
+        //     };
 
-            const filter = { _id: ObjectId(id) };
-            const result = await merchantsCollection.updateOne(filter, updateDoc, options);
+        //     const filter = { _id: ObjectId(id) };
+        //     const result = await merchantsCollection.updateOne(filter, updateDoc, options);
 
-        })
+        // })
 
 
 

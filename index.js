@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000;
 
 var bodyParser = require('body-parser');
 
-app.use(bodyParser());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(fileUpload());
 
@@ -26,6 +26,7 @@ async function run() {
         const accountCollection = database.collection("bbBank");
         const userBalanceCollection = database.collection("userBalance");
         const reviewCollection = database.collection("review");
+        const usersCollection = database.collection('users');
 
         // const merchantsCollection = database.collection("merchants");
 
@@ -64,6 +65,36 @@ async function run() {
             res.json(result);
         })
 
+        app.put('/users/:email', async (req, res) => {
+            console.log(req.params.email);
+            const param = req.params.email;
+            const split = param.split("_");
+
+
+
+            const email = split[0];
+            const amount = split[1];
+
+            console.log(email, amount);
+
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    newAmount: amount,
+                },
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+
+            console.log(result);
+            res.json(result);
+            // console.log(result);
+
+
+        })
+
+
+
 
         app.get('/addMoney', async (req, res) => {
             const cursor = userBalanceCollection.find({});
@@ -88,48 +119,29 @@ async function run() {
         })
 
 
-        //merchant get post put
+        // user
 
-        // app.post('/merchants', async (req, res) => {
-        //     const businessName = req.body.businessName;
-        //     const businessLogo = req.files.businessLogo;
-        //     const merchantPhone = req.body.merchantPhone;
-        //     const merchantNid = req.body.merchantNid;
-        //     const picData = businessLogo.data;
-        //     const encodedPic = picData.toString('base64');
-        //     const imageBuffer = Buffer.from(encodedPic, 'base64');
-        //     const merchant = {
-        //         businessName,
-        //         merchantPhone,
-        //         merchantNid,
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            console.log(result);
+            res.json(result);
+        });
 
-        //         businessLogo: imageBuffer
-        //     }
-        //     const result = await merchantsCollection.insertOne(merchant)
+        app.get('/users', async (req, res) => {
+            const cursor = usersCollection.find({});
+            const users = await cursor.toArray();
+            res.send(users);
+        });
 
-        //     res.json(result);
-        // })
 
-        // app.get('/merchants', async (req, res) => {
-        //     const cursor = merchantsCollection.find({});
-        //     const merchants = await cursor.toArray();
-        //     res.send(merchants);
-        // })
 
-        // app.put('/merchants/:id', async (req, res) => {
-
-        //     const id = req.params.id;
-        //     const options = { upsert: true };
-        //     const updateDoc = {
-        //         $set: {
-        //             status: `Approved`
-        //         },
-        //     };
-
-        //     const filter = { _id: ObjectId(id) };
-        //     const result = await merchantsCollection.updateOne(filter, updateDoc, options);
-
-        // })
+        app.get("/users/:id", async (req, res) => {
+            const result = await usersCollection
+                .find({ _id: ObjectId(req.params.id) })
+                .toArray();
+            res.send(result[0])
+        })
 
 
 
